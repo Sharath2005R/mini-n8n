@@ -4,7 +4,112 @@ This document provides a technical overview of the design, database schema, secu
 
 ---
 
-## 1. Core Workflow Execution Flow
+## 1. Overall System Architecture
+
+The following block diagram outlines the component layout, user client interfaces, serverless API executors, database managers, and third-party AI interfaces:
+
+```mermaid
+graph TD
+    subgraph Client Panel (Localhost:3000)
+        A[Next.js Frontend] -->|Apollo HTTP Client| B(Hasura GraphQL Engine)
+        A -->|WebSocket Subscription| B
+        A -->|Bypass local dev triggers| C(Local Functions Runner: 5001)
+    end
+
+    subgraph Nhost Cloud Environment
+        B -->|Triggers webhook Actions| D(Cloud Serverless Functions)
+        B -->|Read / Write state| E[(PostgreSQL Database)]
+        D -->|Execute GraphQL Mutations| B
+        C -->|Execute Admin Queries| B
+    end
+
+    subgraph Third-Party integrations
+        D -->|API Calls| F[Gemini AI / External Webhooks]
+        C -->|Local API Calls| F
+    end
+```
+
+---
+
+## 2. Database Entity-Relationship Diagram (ERD)
+
+This entity-relationship layout maps the metadata tables, organizational user structures, and step tracking execution models:
+
+```mermaid
+erDiagram
+    organizations {
+        uuid id PK
+        text name
+        integer quota_limit
+        integer quota_used
+    }
+    org_members {
+        uuid id PK
+        uuid org_id FK
+        uuid user_id FK
+        text role
+    }
+    workflows {
+        uuid id PK
+        uuid org_id FK
+        text name
+        text description
+    }
+    workflow_steps {
+        uuid id PK
+        uuid workflow_id FK
+        integer position
+        text name
+        text type
+        jsonb config
+    }
+    workflow_triggers {
+        uuid id PK
+        uuid workflow_id FK
+        text type
+        jsonb config
+        boolean enabled
+    }
+    workflow_runs {
+        uuid id PK
+        uuid workflow_id FK
+        text status
+        text trigger_type
+        jsonb input
+        timestamp started_at
+        timestamp completed_at
+    }
+    step_runs {
+        uuid id PK
+        uuid workflow_run_id FK
+        uuid workflow_step_id FK
+        text status
+        jsonb input
+        jsonb output
+        text error
+        integer attempt_count
+        uuid approved_by FK
+        timestamp approved_at
+    }
+    workflow_results {
+        uuid id PK
+        uuid workflow_id FK
+        uuid workflow_run_id FK
+        jsonb result
+    }
+
+    organizations ||--o{ org_members : has
+    organizations ||--o{ workflows : owns
+    workflows ||--o{ workflow_steps : contains
+    workflows ||--o{ workflow_triggers : configures
+    workflows ||--o{ workflow_runs : spawns
+    workflow_runs ||--o{ step_runs : records
+    workflow_runs ||--o| workflow_results : deposits
+```
+
+---
+
+## 3. Core Workflow Execution Flow
 
 The following Mermaid diagram visualizes the life cycle of a workflow execution, from the initial trigger and quota validation to AI step evaluation, conditional branching, human-in-the-loop approval, and database archival:
 
@@ -43,7 +148,7 @@ graph TD
 
 ---
 
-## 2. Organization Invitation Lifecycle
+## 4. Organization Invitation Lifecycle
 
 To maintain strict organization database isolation and avoid database lockups or duplicate key conflicts on the `(org_id, invited_user_id)` unique constraint, we employ a clean **ephemeral invitation lifecycle**:
 
@@ -61,7 +166,7 @@ graph LR
 
 ---
 
-## 3. Local Development Webhook Bypass
+## 5. Local Development Webhook Bypass
 
 For seamless local debugging without exposing localhost ports using tunneling tools, the frontend dynamically routes execution triggers depending on the environment:
 
@@ -78,7 +183,7 @@ graph TD
 
 ---
 
-## 4. Technical Specifications
+## 6. Technical Specifications
 
 ### 📊 Database Schema Design
 We use PostgreSQL (hosted on Nhost Cloud) with UUID keys. The schema centers around strict workflow definition and audit-trail tracking:
