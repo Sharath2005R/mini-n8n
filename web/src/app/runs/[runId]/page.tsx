@@ -125,13 +125,56 @@ export default function RunMonitorPage() {
     setErrorMsg('');
 
     try {
-      const res = await approveStep({
-        variables: { stepRunId }
-      });
-      if ((res.data as any)?.approveStep?.success) {
-        setFeedbackMsg((res.data as any).approveStep.message || 'Step approved successfully. Resuming workflow...');
+      let success = false;
+      let message = '';
+
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        try {
+          const localRes = await fetch('http://localhost:5001/v1/functions/approve-step', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: {
+                name: 'approveStep'
+              },
+              input: {
+                stepRunId
+              },
+              session_variables: {
+                'x-hasura-user-id': user?.id || ''
+              }
+            })
+          });
+          const localData = await localRes.json();
+          if (localData && localData.success) {
+            success = true;
+            message = localData.message;
+          } else {
+            message = localData.message || 'Failed to approve step locally.';
+          }
+        } catch (localErr) {
+          console.warn('Failed to contact local functions runner for approval, falling back to Hasura Cloud Action webhook...', localErr);
+        }
+      }
+
+      if (!success) {
+        const res = await approveStep({
+          variables: { stepRunId }
+        });
+        if ((res.data as any)?.approveStep?.success) {
+          success = true;
+          message = (res.data as any).approveStep.message || 'Step approved successfully. Resuming workflow...';
+        } else {
+          message = (res.data as any)?.approveStep?.message || 'Failed to approve step.';
+        }
+      }
+
+      if (success) {
+        setFeedbackMsg(message || 'Step approved successfully.');
       } else {
-        setErrorMsg((res.data as any)?.approveStep?.message || 'Failed to approve step.');
+        setErrorMsg(message || 'Failed to approve step.');
       }
     } catch (err: any) {
       setErrorMsg(`Approval error: ${err.message}`);
