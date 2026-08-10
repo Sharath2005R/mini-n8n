@@ -294,11 +294,15 @@ export default function WorkflowBuilderPage() {
     setSelectedStepIdx(targetIdx);
   };
 
-  const updateStepConfig = (field: string, val: any) => {
+  const updateStepConfig = (field: string | Record<string, any>, val?: any) => {
     if (selectedStepIdx === null) return;
     const list = [...steps];
     const item = { ...list[selectedStepIdx] };
-    item.config = { ...item.config, [field]: val };
+    if (typeof field === 'string') {
+      item.config = { ...item.config, [field]: val };
+    } else {
+      item.config = { ...item.config, ...field };
+    }
     list[selectedStepIdx] = item;
     setSteps(list);
   };
@@ -716,8 +720,10 @@ export default function WorkflowBuilderPage() {
                         value={selectedStep.config.provider || 'gemini'}
                         onChange={(e) => {
                           const prov = e.target.value;
-                          updateStepConfig('provider', prov);
-                          updateStepConfig('model', prov === 'gemini' ? 'gemini-2.0-flash' : 'llama-3.3-70b-versatile');
+                          updateStepConfig({
+                            provider: prov,
+                            model: prov === 'gemini' ? 'gemini-2.0-flash' : 'llama-3.3-70b-versatile'
+                          });
                         }}
                         className="input-field"
                         disabled={userRole === 'viewer'}
