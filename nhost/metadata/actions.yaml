@@ -1,0 +1,23 @@
+actions:
+  - name: approveStep
+    definition:
+      kind: synchronous
+      handler: "{{NHOST_FUNCTIONS_URL}}/approve-step"
+      type: mutation
+    permissions:
+      - role: user
+  - name: triggerWorkflowRun
+    definition:
+      kind: synchronous
+      handler: "{{NHOST_FUNCTIONS_URL}}/trigger-workflow-run"
+      type: mutation
+    permissions:
+      - role: user
+custom_types:
+  input_objects: []
+  objects:
+    - name: ApproveStepResponse
+    - name: TriggerWorkflowRunResponse
+  scalars:
+    - name: json
+    - name: uuid

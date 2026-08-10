@@ -1,0 +1,21 @@
+{
+  "name": "mini-n8n-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:functions": "ts-node scripts/functions-runner.ts",
+    "web:dev": "npm run dev --prefix web",
+    "web:build": "npm run build --prefix web",
+    "web:start": "npm run start --prefix web"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.24",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3"
+  }
+}

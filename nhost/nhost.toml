@@ -1,0 +1,5 @@
+[functions.node]
+version = 18
+
+[hasura]
+adminSecret = "nhost-admin-secret"

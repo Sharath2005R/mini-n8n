@@ -1,0 +1,4 @@
+version: 3
+endpoint: https://vekloculvincqebsatyr.hasura.ap-south-1.nhost.run/v1/graphql
+metadata_directory: metadata
+migrations_directory: migrations
