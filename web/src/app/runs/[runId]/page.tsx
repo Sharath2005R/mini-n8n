@@ -294,11 +294,33 @@ export default function RunMonitorPage() {
                                 <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', background: 'var(--warning)', color: 'black' }} onClick={() => handleApprove(sRun.id)} disabled={isApproving}>
                                   {isApproving ? 'Approving...' : '✓ Approve Step Run'}
                                 </button>
-                              ) : (
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                  You have viewer access. Waiting for owner/editor approval.
-                                </span>
                               )}
+                              <div style={{ marginTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '12px' }}>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--info)', marginBottom: '8px' }}>🔗 External Approval Action Links</div>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                  <a 
+                                    href={`http://localhost:5001/v1/functions/external-approve?stepRunId=${sRun.id}&action=approve`} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="btn btn-secondary"
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', textDecoration: 'none', display: 'inline-block' }}
+                                  >
+                                    🟢 Approve Link
+                                  </a>
+                                  <a 
+                                    href={`http://localhost:5001/v1/functions/external-approve?stepRunId=${sRun.id}&action=reject`} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="btn btn-secondary"
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', textDecoration: 'none', display: 'inline-block' }}
+                                  >
+                                    🔴 Reject Link
+                                  </a>
+                                </div>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '8px' }}>
+                                  You can trigger these pre-signed endpoints from external systems like Email templates or Slack webhooks.
+                                </span>
+                              </div>
                             </div>
                           )}
 

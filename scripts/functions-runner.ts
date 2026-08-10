@@ -33,8 +33,18 @@ app.use((req, res, next) => {
 import approveStepHandler from '../functions/approve-step';
 import triggerWorkflowRunHandler from '../functions/trigger-workflow-run';
 import notificationHandler from '../functions/notification';
+import externalApproveHandler from '../functions/external-approve';
 
 // Routes mapping Nhost conventions
+app.get('/v1/functions/external-approve', async (req, res) => {
+  try {
+    await externalApproveHandler(req, res);
+  } catch (err: any) {
+    console.error('Error in external-approve function:', err);
+    res.status(500).send('<h1>Internal Server Error</h1><p>' + err.message + '</p>');
+  }
+});
+
 app.post('/v1/functions/approve-step', async (req, res) => {
   try {
     await approveStepHandler(req, res);

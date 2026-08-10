@@ -261,6 +261,13 @@ export async function executeWorkflow(runId: string, resumeFromStepId?: string) 
             error: null,
           });
 
+          console.log(`\n==================================================`);
+          console.log(`⚠️  APPROVAL REQUIRED FOR WORKFLOW RUN: ${runId}`);
+          console.log(`Step: "${step.name}"`);
+          console.log(`👉 APPROVE LINK: http://localhost:5001/v1/functions/external-approve?stepRunId=${stepRunId}&action=approve`);
+          console.log(`👉 REJECT LINK:  http://localhost:5001/v1/functions/external-approve?stepRunId=${stepRunId}&action=reject`);
+          console.log(`==================================================\n`);
+
           console.log(`Workflow run ${runId} paused at Approval Gate step ${step.id}`);
           return { success: true, paused: true, workflowRunId: runId };
         } else if (step.type === 'db_write') {
