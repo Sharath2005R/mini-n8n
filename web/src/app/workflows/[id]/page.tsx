@@ -445,8 +445,16 @@ export default function WorkflowBuilderPage() {
   };
 
   // Generate Webhook URL
-  const backendUrl = process.env.NEXT_PUBLIC_NHOST_BACKEND_URL;
-  const webhookUrl = `${backendUrl}/v1/functions/trigger-workflow-run?workflowId=${workflowId}&secret=${webhookSecret || 'YOUR_SECRET'}`;
+  let webhookUrl = '';
+  const subdomain = process.env.NEXT_PUBLIC_NHOST_SUBDOMAIN || '';
+  const region = process.env.NEXT_PUBLIC_NHOST_REGION || '';
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    webhookUrl = `http://localhost:5001/v1/functions/trigger-workflow-run?workflowId=${workflowId}&secret=${webhookSecret || 'YOUR_SECRET'}`;
+  } else if (subdomain && region) {
+    webhookUrl = `https://${subdomain}.functions.${region}.nhost.run/v1/trigger-workflow-run?workflowId=${workflowId}&secret=${webhookSecret || 'YOUR_SECRET'}`;
+  } else {
+    webhookUrl = `https://vekloculvincqebsatyr.functions.ap-south-1.nhost.run/v1/trigger-workflow-run?workflowId=${workflowId}&secret=${webhookSecret || 'YOUR_SECRET'}`;
+  }
 
   const selectedStep = selectedStepIdx !== null ? steps[selectedStepIdx] : null;
 
