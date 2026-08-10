@@ -54,7 +54,7 @@ const INCREMENT_QUOTA = `
 `;
 
 const CREATE_STEP_RUN = `
-  mutation CreateStepRun($runId: uuid!, $stepId: uuid!, $input: json!) {
+  mutation CreateStepRun($runId: uuid!, $stepId: uuid!, $input: jsonb!) {
     insert_step_runs_one(object: {
       workflow_run_id: $runId,
       workflow_step_id: $stepId,
@@ -69,7 +69,7 @@ const CREATE_STEP_RUN = `
 `;
 
 const UPDATE_STEP_RUN = `
-  mutation UpdateStepRun($stepRunId: uuid!, $status: String!, $output: json!, $error: String, $attemptCount: Int!, $completedAt: timestamptz) {
+  mutation UpdateStepRun($stepRunId: uuid!, $status: String!, $output: jsonb!, $error: String, $attemptCount: Int!, $completedAt: timestamptz) {
     update_step_runs_by_pk(
       pk_columns: {id: $stepRunId},
       _set: {
@@ -86,7 +86,7 @@ const UPDATE_STEP_RUN = `
 `;
 
 const CREATE_WORKFLOW_RESULT = `
-  mutation CreateWorkflowResult($workflowId: uuid!, $runId: uuid!, $result: json!) {
+  mutation CreateWorkflowResult($workflowId: uuid!, $runId: uuid!, $result: jsonb!) {
     insert_workflow_results_one(object: {
       workflow_id: $workflowId,
       workflow_run_id: $runId,
