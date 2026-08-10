@@ -228,7 +228,7 @@ export async function executeWorkflow(runId: string, resumeFromStepId?: string) 
     while (attempt <= 2 && !stepSuccess) {
       try {
         if (step.type === 'llm_call') {
-          stepOutput = await executeLlmCall(stepInput.prompt, stepInput.model);
+          stepOutput = await executeLlmCall(stepInput.prompt, stepInput.model, stepInput.provider);
           stepSuccess = true;
         } else if (step.type === 'http_request') {
           stepOutput = await executeHttpRequest(stepInput);
@@ -380,18 +380,77 @@ export async function executeWorkflow(runId: string, resumeFromStepId?: string) 
   return { success: true, completed: true, workflowRunId: runId };
 }
 
+function getStubFallback(prompt: string, reasonDetails: string) {
+  const lowercasePrompt = prompt.toLowerCase();
+  const refundRequired = lowercasePrompt.includes('refund') || lowercasePrompt.includes('damage');
+  return {
+    refund_required: refundRequired,
+    reason: `AI classification stubbed (${reasonDetails})`,
+  };
+}
+
 // Sub-executor for LLM Call
-async function executeLlmCall(prompt: string, model?: string): Promise<any> {
+async function executeLlmCall(prompt: string, model?: string, provider?: string): Promise<any> {
+  const finalProvider = provider || 'gemini';
+
+  if (finalProvider === 'groq') {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) {
+      console.warn('GROQ_API_KEY is not defined. Using stub fallback.');
+      return getStubFallback(prompt, 'No GROQ_API_KEY present');
+    }
+
+    const selectedModel = model || 'llama-3.3-70b-versatile';
+    const url = 'https://api.groq.com/openai/v1/chat/completions';
+    const systemPrompt = `Return ONLY a valid JSON object matching this schema: {"refund_required": boolean, "reason": string}.`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqKey}`
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        if (response.status === 429 || response.status === 403 || errorText.includes('quota') || errorText.includes('limit')) {
+          console.warn(`Groq API returned error status ${response.status}. Falling back to local AI stub classification...`);
+          return getStubFallback(prompt, `Groq API status ${response.status}: Quota Exceeded`);
+        }
+        throw new Error(`Groq API Call failed: ${response.statusText}. Details: ${errorText}`);
+      }
+
+      const result = (await response.json()) as any;
+      const textResponse = result.choices?.[0]?.message?.content;
+      if (!textResponse) {
+        throw new Error('Groq API returned an empty response.');
+      }
+
+      return JSON.parse(textResponse.trim());
+    } catch (err: any) {
+      if (err.message.includes('quota') || err.message.includes('429') || err.message.includes('403')) {
+        console.warn('Groq API call threw an error. Falling back to local AI stub classification...', err.message);
+        return getStubFallback(prompt, `Groq API error: ${err.message}`);
+      }
+      throw err;
+    }
+  }
+
+  // Default: Gemini
   const geminiKey = process.env.GEMINI_API_KEY;
   if (!geminiKey) {
     console.warn('GEMINI_API_KEY is not defined. Using stub fallback.');
-    await new Promise(resolve => setTimeout(resolve, 1000)); // artificial delay
-    const lowercasePrompt = prompt.toLowerCase();
-    const refundRequired = lowercasePrompt.includes('refund') || lowercasePrompt.includes('damage');
-    return {
-      refund_required: refundRequired,
-      reason: 'AI classification stubbed (No GEMINI_API_KEY present)',
-    };
+    return getStubFallback(prompt, 'No GEMINI_API_KEY present');
   }
 
   const selectedModel = model || 'gemini-2.0-flash';
@@ -413,12 +472,7 @@ async function executeLlmCall(prompt: string, model?: string): Promise<any> {
     // Catch quota limits, access errors, or billing limitations, and fallback to stub
     if (response.status === 429 || response.status === 403 || errorText.includes('quota') || errorText.includes('limit')) {
       console.warn(`Gemini API returned error status ${response.status}. Falling back to local AI stub classification...`);
-      const lowercasePrompt = prompt.toLowerCase();
-      const refundRequired = lowercasePrompt.includes('refund') || lowercasePrompt.includes('damage');
-      return {
-        refund_required: refundRequired,
-        reason: `AI classification stubbed (Gemini API status ${response.status}: Quota Exceeded)`,
-      };
+      return getStubFallback(prompt, `Gemini API status ${response.status}: Quota Exceeded`);
     }
     throw new Error(`Gemini API Call failed: ${response.statusText}. Details: ${errorText}`);
   }
