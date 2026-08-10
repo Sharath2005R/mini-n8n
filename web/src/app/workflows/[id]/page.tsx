@@ -713,7 +713,7 @@ export default function WorkflowBuilderPage() {
                     <div className="form-group">
                       <label className="form-label">Provider</label>
                       <select
-                        value={selectedStep.config.provider}
+                        value={selectedStep.config.provider || 'gemini'}
                         onChange={(e) => {
                           const prov = e.target.value;
                           updateStepConfig('provider', prov);
@@ -728,7 +728,7 @@ export default function WorkflowBuilderPage() {
                     </div>
                     <div className="form-group">
                       <label className="form-label">Model</label>
-                      {selectedStep.config.provider === 'gemini' ? (
+                      {(selectedStep.config.provider || 'gemini') === 'gemini' ? (
                         <select
                           value={selectedStep.config.model || 'gemini-2.0-flash'}
                           onChange={(e) => updateStepConfig('model', e.target.value)}
