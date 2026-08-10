@@ -242,7 +242,7 @@
                               _eq: editor
                 - type:
                     _nin: [db_write, notify]
-        columns: [workflow_id, position, name, type, config]
+        columns: [id, workflow_id, position, name, type, config]
   update_permissions:
     - role: user
       permission:
