@@ -713,7 +713,11 @@ export default function WorkflowBuilderPage() {
                       <label className="form-label">Provider</label>
                       <select
                         value={selectedStep.config.provider}
-                        onChange={(e) => updateStepConfig('provider', e.target.value)}
+                        onChange={(e) => {
+                          const prov = e.target.value;
+                          updateStepConfig('provider', prov);
+                          updateStepConfig('model', prov === 'gemini' ? 'gemini-2.0-flash' : 'llama-3.3-70b-versatile');
+                        }}
                         className="input-field"
                         disabled={userRole === 'viewer'}
                       >
@@ -723,13 +727,29 @@ export default function WorkflowBuilderPage() {
                     </div>
                     <div className="form-group">
                       <label className="form-label">Model</label>
-                      <input
-                        type="text"
-                        value={selectedStep.config.model}
-                        onChange={(e) => updateStepConfig('model', e.target.value)}
-                        className="input-field"
-                        disabled={userRole === 'viewer'}
-                      />
+                      {selectedStep.config.provider === 'gemini' ? (
+                        <select
+                          value={selectedStep.config.model || 'gemini-2.0-flash'}
+                          onChange={(e) => updateStepConfig('model', e.target.value)}
+                          className="input-field"
+                          disabled={userRole === 'viewer'}
+                        >
+                          <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</option>
+                          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        </select>
+                      ) : (
+                        <select
+                          value={selectedStep.config.model || 'llama-3.3-70b-versatile'}
+                          onChange={(e) => updateStepConfig('model', e.target.value)}
+                          className="input-field"
+                          disabled={userRole === 'viewer'}
+                        >
+                          <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                          <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                          <option value="gemma2-9b-it">Gemma 2 9B</option>
+                        </select>
+                      )}
                     </div>
                     <div className="form-group">
                       <label className="form-label">Prompt Template</label>
