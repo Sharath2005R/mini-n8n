@@ -228,7 +228,7 @@ export async function executeWorkflow(runId: string, resumeFromStepId?: string) 
     while (attempt <= 2 && !stepSuccess) {
       try {
         if (step.type === 'llm_call') {
-          stepOutput = await executeLlmCall(stepInput.prompt);
+          stepOutput = await executeLlmCall(stepInput.prompt, stepInput.model);
           stepSuccess = true;
         } else if (step.type === 'http_request') {
           stepOutput = await executeHttpRequest(stepInput);
@@ -374,7 +374,7 @@ export async function executeWorkflow(runId: string, resumeFromStepId?: string) 
 }
 
 // Sub-executor for LLM Call
-async function executeLlmCall(prompt: string): Promise<any> {
+async function executeLlmCall(prompt: string, model?: string): Promise<any> {
   const geminiKey = process.env.GEMINI_API_KEY;
   if (!geminiKey) {
     console.warn('GEMINI_API_KEY is not defined. Using stub fallback.');
@@ -387,7 +387,8 @@ async function executeLlmCall(prompt: string): Promise<any> {
     };
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+  const selectedModel = model || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${geminiKey}`;
   const promptRequest = `${prompt}\n\nReturn ONLY a valid JSON object in your response, matching this schema: {"refund_required": boolean, "reason": string}. Do not wrap the JSON in markdown codeblocks (e.g. \`\`\`json).`;
 
   const response = await fetch(url, {
@@ -402,6 +403,16 @@ async function executeLlmCall(prompt: string): Promise<any> {
 
   if (!response.ok) {
     const errorText = await response.text();
+    // Catch quota limits, access errors, or billing limitations, and fallback to stub
+    if (response.status === 429 || response.status === 403 || errorText.includes('quota') || errorText.includes('limit')) {
+      console.warn(`Gemini API returned error status ${response.status}. Falling back to local AI stub classification...`);
+      const lowercasePrompt = prompt.toLowerCase();
+      const refundRequired = lowercasePrompt.includes('refund') || lowercasePrompt.includes('damage');
+      return {
+        refund_required: refundRequired,
+        reason: `AI classification stubbed (Gemini API status ${response.status}: Quota Exceeded)`,
+      };
+    }
     throw new Error(`Gemini API Call failed: ${response.statusText}. Details: ${errorText}`);
   }
 
