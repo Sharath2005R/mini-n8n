@@ -195,7 +195,7 @@ export default function WorkflowBuilderPage() {
     switch (type) {
       case 'llm_call':
         defaultName = 'AI Classifier';
-        defaultConfig = { provider: 'gemini', model: 'gemini-2.5-flash', prompt: 'Analyze this input: {{input}}' };
+        defaultConfig = { provider: 'gemini', model: 'gemini-2.0-flash', prompt: 'Analyze this input: {{input}}' };
         break;
       case 'http_request':
         defaultName = 'External API Check';
