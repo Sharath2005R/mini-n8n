@@ -290,7 +290,7 @@ export default function RunMonitorPage() {
                               <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '16px' }}>
                                 Approval is required to resume execution. Owners and Editors can approve.
                               </p>
-                              {userRole === 'owner' || userRole === 'editor' ? (
+                              {(userRole === 'owner' || userRole === 'editor') && (
                                 <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', background: 'var(--warning)', color: 'black' }} onClick={() => handleApprove(sRun.id)} disabled={isApproving}>
                                   {isApproving ? 'Approving...' : '✓ Approve Step Run'}
                                 </button>
