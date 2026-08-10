@@ -319,6 +319,7 @@ export default function WorkflowBuilderPage() {
 
     // Generate step array for insertion
     const stepInserts = steps.map((s) => ({
+      id: s.id || undefined,
       workflow_id: workflowId,
       position: s.position,
       name: s.name,
@@ -897,8 +898,8 @@ export default function WorkflowBuilderPage() {
                         className="input-field"
                         disabled={userRole === 'viewer'}
                       >
-                        <option value="END">🛑 End Workflow</option>
                         <option value="">Next Position Step</option>
+                        <option value="END">🛑 End Workflow</option>
                         {steps.filter(s => s.position !== selectedStep.position).map(s => (
                           <option key={s.id || s.position} value={s.id}>
                             Position {s.position + 1}: {s.name}
@@ -915,8 +916,8 @@ export default function WorkflowBuilderPage() {
                         className="input-field"
                         disabled={userRole === 'viewer'}
                       >
-                        <option value="END">🛑 End Workflow</option>
                         <option value="">Next Position Step</option>
+                        <option value="END">🛑 End Workflow</option>
                         {steps.filter(s => s.position !== selectedStep.position).map(s => (
                           <option key={s.id || s.position} value={s.id}>
                             Position {s.position + 1}: {s.name}
