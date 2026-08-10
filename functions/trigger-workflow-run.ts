@@ -42,7 +42,7 @@ const CHECK_WEBHOOK_TRIGGER = `
 `;
 
 const CREATE_WORKFLOW_RUN = `
-  mutation CreateWorkflowRun($workflowId: uuid!, $triggerType: String!, $input: json!) {
+  mutation CreateWorkflowRun($workflowId: uuid!, $triggerType: String!, $input: jsonb!) {
     insert_workflow_runs_one(object: {
       workflow_id: $workflowId,
       trigger_type: $triggerType,
