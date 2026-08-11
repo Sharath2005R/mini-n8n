@@ -10,20 +10,20 @@ The following block diagram outlines the component layout, user client interface
 
 ```mermaid
 graph TD
-    subgraph Client Panel (Localhost:3000)
+    subgraph "Client Panel (Localhost:3000)"
         A[Next.js Frontend] -->|Apollo HTTP Client| B(Hasura GraphQL Engine)
         A -->|WebSocket Subscription| B
         A -->|Bypass local dev triggers| C(Local Functions Runner: 5001)
     end
 
-    subgraph Nhost Cloud Environment
+    subgraph "Nhost Cloud Environment"
         B -->|Triggers webhook Actions| D(Cloud Serverless Functions)
         B -->|Read / Write state| E[(PostgreSQL Database)]
         D -->|Execute GraphQL Mutations| B
         C -->|Execute Admin Queries| B
     end
 
-    subgraph Third-Party integrations
+    subgraph "Third-Party integrations"
         D -->|API Calls| F[Gemini AI / External Webhooks]
         C -->|Local API Calls| F
     end
