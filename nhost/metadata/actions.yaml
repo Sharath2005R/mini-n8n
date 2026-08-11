@@ -2,14 +2,14 @@ actions:
   - name: approveStep
     definition:
       kind: synchronous
-      handler: "{{NHOST_FUNCTIONS_URL}}/v1/approve-step"
+      handler: "{{NHOST_FUNCTIONS_URL}}/approve-step"
       type: mutation
     permissions:
       - role: user
   - name: triggerWorkflowRun
     definition:
       kind: synchronous
-      handler: "{{NHOST_FUNCTIONS_URL}}/v1/trigger-workflow-run"
+      handler: "{{NHOST_FUNCTIONS_URL}}/trigger-workflow-run"
       type: mutation
     permissions:
       - role: user
